@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "634678995512",
+    "project_id": "asthmaguard-d7aa2",
+    "storage_bucket": "asthmaguard-d7aa2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:634678995512:android:4954c8a83194e3f61694cd",
+        "android_client_info": {
+          "package_name": "com.example.asthmaguardv2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCenrZDlaWfvt9o2TInoo2Slu68SBPfp5g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
