@@ -11,6 +11,8 @@ import 'package:mobile/screens/pollution_tracker/pollution_tracker_screen.dart';
 import 'package:mobile/screens/health_report/health_report.dart';
 import 'package:mobile/screens/settings/settings_tab.dart';
 import 'package:mobile/screens/sensors/live_sensor_screen.dart';
+import 'package:mobile/screens/profile/profile_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Helper function to get color based on PM2.5 air quality value
 Color getAirQualityColor(int? pm25) {
@@ -46,11 +48,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Stream<List<int>>? _pressureStream;
   Stream<List<int>>? _pm25Stream; // For PM2.5 stream
   Stream<List<int>>? _pm10Stream; // For PM10 stream;
+  String _fullName = 'User';
 
   @override
   void initState() {
     super.initState();
     _connectAndSubscribeBLE();
+    _loadFullName();
+  }
+
+  Future<void> _loadFullName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _fullName = prefs.getString('fullName') ?? 'User';
+    });
+  }
+
+  String _getScreenTitle(int index) {
+    switch (index) {
+      case 1:
+        return 'Pollution Tracker';
+      case 2:
+        return 'Live Sensor Data';
+      case 3:
+        return 'Health Report';
+      case 4:
+        return 'Settings';
+      default:
+        return '';
+    }
   }
 
   Future<void> _connectAndSubscribeBLE() async {
@@ -231,106 +257,71 @@ class _DashboardScreenState extends State<DashboardScreen> {
         pm10: _pm10,
       ),
       const PollutionTrackerScreen(),
-      const LiveSensorScreen(),
+      LiveSensorScreen(
+        temperature: _temperature,
+        pressure: _pressure,
+        humidity: humidity,
+        pm25: _pm25,
+        pm10: _pm10,
+      ),
       const HealthReportScreen(),
       const SettingsTab(),
     ];
+    final now = DateTime.now();
+    final String formattedDate = DateFormat('EEEE, MMMM d').format(now);
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.teal.withOpacity(0.85),
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF26A69A), Color(0xFF80CBC4)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hi, User',
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Welcome back!',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.85),
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const NotificationsScreen(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-          PopupMenuButton<String>(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            offset: const Offset(0, 48),
-            icon: CircleAvatar(
-              radius: 18,
-              backgroundColor: Colors.white,
-              child: Icon(Icons.person, color: Colors.teal.shade700),
-            ),
-            onSelected: (value) async {
-              if (value == 'profile') {
-                Navigator.pushNamed(context, '/profile');
-              } else if (value == 'logout') {
-                Navigator.pushReplacementNamed(context, '/login');
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'profile',
-                child: Row(
-                  children: [
-                    Icon(Icons.account_circle, color: Colors.teal),
-                    SizedBox(width: 8),
-                    Text('Profile'),
-                  ],
+      appBar: _selectedIndex == 0
+          ? AppBar(
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              title: Text(
+                'Hi, $_fullName',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
                 ),
               ),
-              const PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Log out'),
-                  ],
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_none,
+                      size: 28, color: Colors.blue), // Changed color to blue
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NotificationsScreen(),
+                      ),
+                    );
+                  },
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
-        ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: GestureDetector(
+                    onTap: () {
+                      _showProfileMenu(context);
+                    },
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: Text(
+                        "U",
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : null,
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _screens,
       ),
-      body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal,
+        selectedItemColor: Colors.blue, // Changed from teal to blue
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           setState(() {
@@ -360,6 +351,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showProfileMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero),
+            ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu(
+      context: context,
+      position: position,
+      items: [
+        PopupMenuItem(
+          child: ListTile(
+            leading: const Icon(Icons.person, color: Colors.blue),
+            title: const Text('Profile'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
+            },
+          ),
+        ),
+        PopupMenuItem(
+          child: ListTile(
+            leading: const Icon(Icons.logout, color: Colors.blue),
+            title: const Text('Logout'),
+            onTap: () {
+              // Handle logout
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -404,11 +439,12 @@ class _HomeDashboard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.teal.withOpacity(0.12),
+                        color:
+                            Colors.blue.withOpacity(0.12), // Changed from teal
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.calendar_today,
-                          color: Colors.teal, size: 28),
+                          color: Colors.blue, size: 28), // Changed from teal
                     ),
                     const SizedBox(width: 18),
                     Expanded(
@@ -423,7 +459,7 @@ class _HomeDashboard extends StatelessWidget {
                               color: Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? Colors.white
-                                  : Colors.teal.shade700,
+                                  : Colors.blue, // Changed from teal
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -470,7 +506,7 @@ class _HomeDashboard extends StatelessWidget {
               'Environmental Metrics',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.teal.shade800,
+                    color: Colors.blue, // Changed from teal
                   ),
             ),
             const SizedBox(height: 16),
@@ -511,80 +547,20 @@ class _HomeDashboard extends StatelessWidget {
                   icon: Icons.air,
                   label: 'Air Quality',
                   value: pm25 != null ? '${pm25} μg/m³' : 'N/A',
-                  color: Colors.green, // Will update to dynamic color later
+                  color: getAirQualityColor(pm25),
                 ),
               ],
             ),
             const SizedBox(height: 28),
-            // Emergency Button
-            Center(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeInOut,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF5F6D), Color(0xFFFFC371)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.red.withOpacity(0.25),
-                      blurRadius: 16,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(32),
-                    splashColor: Colors.redAccent.withOpacity(0.2),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const EmergencyContactsScreen(),
-                        ),
-                      );
-                    },
-                    child: const Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 40, vertical: 18),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.warning_amber_rounded,
-                              color: Colors.white, size: 28),
-                          SizedBox(width: 12),
-                          Text(
-                            'EMERGENCY',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-            // Tools Grid
+            // Your Tools Section
             Text(
               'Your Tools',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.teal.shade800,
+                    color: Colors.blue, // Changed from teal
                   ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),

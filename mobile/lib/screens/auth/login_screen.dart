@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const primaryColor = Colors.teal; // Define primary color
+    const primaryColor = Color(0xFF4285F4); // Use blue for primary color
     final textColor = isDark ? Colors.white : const Color(0xFF333333);
 
     return Scaffold(
@@ -209,10 +209,10 @@ class _LoginScreenState extends State<LoginScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Don\\'t have an account?",
+                            "Don't have an account?",
                             style: TextStyle(
-                                color:
-                                    isDark ? Colors.white70 : Colors.grey[800]),
+                              color: isDark ? Colors.white70 : Colors.grey[800],
+                            ),
                           ),
                           TextButton(
                             onPressed: () =>
@@ -220,8 +220,9 @@ class _LoginScreenState extends State<LoginScreen>
                             child: const Text(
                               'Sign Up',
                               style: TextStyle(
-                                  color: primaryColor,
-                                  fontWeight: FontWeight.bold),
+                                color: primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],

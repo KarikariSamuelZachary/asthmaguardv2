@@ -29,7 +29,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Password reset link sent to your email.'),
-          backgroundColor: Colors.green,
+          backgroundColor: Colors.blue,
         ),
       );
       Navigator.pop(context); // Go back to the previous screen (LoginScreen)
@@ -39,7 +39,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const primaryColor = Colors.teal;
+    const primaryColor = Color(0xFF4285F4); // Use blue for primary color
     final textColor = isDark ? Colors.white : const Color(0xFF333333);
 
     return Scaffold(
@@ -92,14 +92,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         labelText: 'Email',
-                        prefixIcon:
-                            const Icon(Icons.email_outlined, color: primaryColor),
+                        prefixIcon: const Icon(Icons.email_outlined,
+                            color: primaryColor),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: primaryColor, width: 2),
+                          borderSide:
+                              const BorderSide(color: primaryColor, width: 2),
                         ),
                       ),
                       validator: (value) {

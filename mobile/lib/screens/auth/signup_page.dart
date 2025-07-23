@@ -76,7 +76,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const primaryColor = Colors.teal; // Define primary color for consistency
+    const primaryColor = Color(0xFF4285F4); // Use blue for primary color
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
