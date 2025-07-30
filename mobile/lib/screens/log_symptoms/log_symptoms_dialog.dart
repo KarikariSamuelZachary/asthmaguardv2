@@ -38,7 +38,9 @@ class _LogSymptomsDialogState extends State<LogSymptomsDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Log Asthma Symptom'),
+      title: const Text('Log Asthma Symptom',
+          style:
+              TextStyle(color: Color(0xFF4285F4), fontWeight: FontWeight.bold)),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -49,7 +51,7 @@ class _LogSymptomsDialogState extends State<LogSymptomsDialog> {
                 value: _selectedSymptom,
                 decoration: const InputDecoration(
                   labelText: 'Symptom*',
-                  prefixIcon: Icon(Icons.sick),
+                  prefixIcon: Icon(Icons.sick, color: Colors.redAccent),
                 ),
                 items: _symptoms
                     .map((symptom) => DropdownMenuItem(
@@ -65,7 +67,8 @@ class _LogSymptomsDialogState extends State<LogSymptomsDialog> {
                 value: _selectedTrigger,
                 decoration: const InputDecoration(
                   labelText: 'Potential Trigger*',
-                  prefixIcon: Icon(Icons.warning_amber_rounded),
+                  prefixIcon:
+                      Icon(Icons.warning_amber_rounded, color: Colors.amber),
                 ),
                 items: _triggers
                     .map((trigger) => DropdownMenuItem(
@@ -80,7 +83,7 @@ class _LogSymptomsDialogState extends State<LogSymptomsDialog> {
               TextFormField(
                 decoration: const InputDecoration(
                   labelText: 'Notes (optional)',
-                  prefixIcon: Icon(Icons.notes),
+                  prefixIcon: Icon(Icons.notes, color: Colors.blueAccent),
                 ),
                 maxLines: 2,
                 onChanged: (value) => _notes = value,
@@ -97,7 +100,7 @@ class _LogSymptomsDialogState extends State<LogSymptomsDialog> {
         ElevatedButton(
           onPressed: _saving ? null : _handleSubmit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.teal,
+            backgroundColor: Color(0xFF4285F4),
             foregroundColor: Colors.white,
           ),
           child: _saving

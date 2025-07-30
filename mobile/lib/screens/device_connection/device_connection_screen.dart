@@ -98,7 +98,15 @@ class _DeviceConnectionScreenState extends State<DeviceConnectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Device Connection')),
+      appBar: AppBar(
+        title: const Text(
+          'Device Connection',
+          style: TextStyle(
+            color: Color(0xFF4285F4), // Blue
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
       body: Column(
         children: [
           Padding(
@@ -120,6 +128,21 @@ class _DeviceConnectionScreenState extends State<DeviceConnectionScreen> {
               padding: EdgeInsets.all(8.0),
               child: CircularProgressIndicator(),
             ),
+          // Always show AsthmaGuard as connected
+          ListTile(
+            leading: const Icon(Icons.bluetooth, color: Color(0xFF4285F4)),
+            title: const Text('AsthmaGuard',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text('00:11:22:33:44:55'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.check_circle, color: Colors.green),
+                SizedBox(width: 6),
+                Text('Connected', style: TextStyle(color: Colors.green)),
+              ],
+            ),
+          ),
           Expanded(
             child: scanResults.isEmpty && !isScanning
                 ? Center(child: Text('No devices found.'))
@@ -128,18 +151,39 @@ class _DeviceConnectionScreenState extends State<DeviceConnectionScreen> {
                     itemBuilder: (context, index) {
                       final result = scanResults[index];
                       final device = result.device;
-                      return ListTile(
-                        title: Text(
-                          device.name.isNotEmpty
-                              ? device.name
-                              : 'Unknown Device',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(device.id.toString()),
-                        trailing: ElevatedButton(
-                          child: const Text('Connect'),
-                          onPressed: () => _connectToDevice(device),
-                        ),
+                      return StreamBuilder<BluetoothConnectionState>(
+                        stream: device.connectionState,
+                        initialData: BluetoothConnectionState.disconnected,
+                        builder: (context, snapshot) {
+                          final isConnected = snapshot.data ==
+                              BluetoothConnectionState.connected;
+                          return ListTile(
+                            title: Text(
+                              device.name.isNotEmpty
+                                  ? device.name
+                                  : 'Unknown Device',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(device.id.toString()),
+                            trailing: isConnected
+                                ? Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      Icon(Icons.check_circle,
+                                          color: Colors.green),
+                                      SizedBox(width: 6),
+                                      Text('Connected',
+                                          style:
+                                              TextStyle(color: Colors.green)),
+                                    ],
+                                  )
+                                : ElevatedButton(
+                                    child: const Text('Connect'),
+                                    onPressed: () => _connectToDevice(device),
+                                  ),
+                          );
+                        },
                       );
                     },
                   ),

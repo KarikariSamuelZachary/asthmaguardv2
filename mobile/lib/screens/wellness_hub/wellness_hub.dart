@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:provider/provider.dart';
+import '../../providers/sound_provider.dart';
+import '../../providers/audio_provider.dart';
 import 'components/breathing_section.dart';
 import 'components/meditation_section.dart';
 import 'components/sounds_section.dart';
@@ -29,29 +32,44 @@ class _WellnessHubState extends State<WellnessHub> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
-      appBar: AppBar(
-        title: const Text('Wellness Hub'),
-        centerTitle: false,
-      ),
-      body: Column(
-        children: [
-          SectionNavigation(
-            activeSection: _activeSection,
-            onSectionChange: (section) {
-              setState(() => _activeSection = section);
-            },
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                child: _buildActiveSection(isDark),
-              ),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => SoundProvider()),
+        ChangeNotifierProvider(create: (_) => AudioProvider()),
+      ],
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+        appBar: AppBar(
+          title: const Text(
+            'Wellness Hub',
+            style: TextStyle(
+              color: Color(0xFF4285F4), // Google Blue
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ],
+          centerTitle: false,
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+          iconTheme: const IconThemeData(color: Color(0xFF4285F4)),
+          elevation: 0,
+        ),
+        body: Column(
+          children: [
+            SectionNavigation(
+              activeSection: _activeSection,
+              onSectionChange: (section) {
+                setState(() => _activeSection = section);
+              },
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                  child: _buildActiveSection(isDark),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

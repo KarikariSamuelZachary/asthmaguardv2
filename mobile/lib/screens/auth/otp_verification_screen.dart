@@ -16,12 +16,30 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   void initState() {
     super.initState();
     _sendVerificationEmailIfNeeded();
+    _startVerificationCheck();
   }
 
   Future<void> _sendVerificationEmailIfNeeded() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && !user.emailVerified) {
       await user.sendEmailVerification();
+    }
+  }
+
+  void _startVerificationCheck() {
+    Future.delayed(const Duration(seconds: 2), _checkEmailVerifiedAndRedirect);
+  }
+
+  Future<void> _checkEmailVerifiedAndRedirect() async {
+    await FirebaseAuth.instance.currentUser?.reload();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.emailVerified) {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/onboarding');
+      }
+    } else {
+      // If not verified, check again after a short delay
+      _startVerificationCheck();
     }
   }
 
@@ -106,49 +124,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   : const Text('Resend Email'),
             ),
             const SizedBox(height: 24),
-            Text(
-              "Once you've verified your email, please return to the app and log in.",
-              style: TextStyle(
-                fontSize: 15,
-                color: isDark ? Colors.white60 : Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () async {
-                setState(() => _isLoading = true);
-                await FirebaseAuth.instance.currentUser?.reload();
-                final user = FirebaseAuth.instance.currentUser;
-                if (user != null && user.emailVerified) {
-                  Navigator.pushReplacementNamed(context, '/onboarding1');
-                } else {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text(
-                              'Email not verified yet. Please check your inbox.')),
-                    );
-                  }
-                }
-                setState(() => _isLoading = false);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2))
-                  : const Text('Continue'),
-            ),
           ],
         ),
       ),

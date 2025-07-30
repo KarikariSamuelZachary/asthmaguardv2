@@ -1,5 +1,6 @@
 #include <ArduinoBLE.h>
 #include <Arduino_LPS22HB.h>
+#include <LiquidCrystal_I2C.h>
 
 #define BUFFER_SIZE 20
 
@@ -24,6 +25,11 @@ uint16_t pm1_0_ATM = 0;
 uint16_t pm2_5_ATM = 0;
 uint16_t pm10_ATM = 0;
 bool newPMSData = false;
+
+// LCD setup
+LiquidCrystal_I2C lcd(0x27, 16, 2); // Change 0x27 to your LCD's I2C address if needed
+unsigned long lastLcdSwitch = 0;
+int lcdState = 0; // 0: Temp, 1: Pressure, 2: PM1.0, 3: PM2.5, 4: PM10
 
 void setup() {
   Serial.begin(9600);
@@ -69,6 +75,15 @@ void setup() {
   
   // Initialize built-in LED to indicate connection status
   pinMode(LED_BUILTIN, OUTPUT);
+
+  // LCD initialization
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("AsthmaGuard");
+  delay(1000);
+  lcd.clear();
 }
 
 void loop() {
@@ -96,6 +111,51 @@ void loop() {
     
     digitalWrite(LED_BUILTIN, LOW); // Turn off LED when disconnected
     Serial.println("Disconnected from central");
+  }
+  
+  // LCD display cycling logic
+  unsigned long now = millis();
+  if (now - lastLcdSwitch > 3000) {
+    lcd.clear();
+    switch (lcdState) {
+      case 0:
+        lcd.setCursor(0, 0);
+        lcd.print("Temp: ");
+        lcd.print(BARO.readTemperature(), 1);
+        lcd.print(" C");
+        break;
+      case 1:
+        lcd.setCursor(0, 0);
+        lcd.print("Pressure:");
+        lcd.setCursor(0, 1);
+        lcd.print(BARO.readPressure(), 1);
+        lcd.print(" hPa");
+        break;
+      case 2:
+        lcd.setCursor(0, 0);
+        lcd.print("PM1.0:");
+        lcd.setCursor(0, 1);
+        lcd.print(pm1_0_ATM);
+        lcd.print(" ug/m3");
+        break;
+      case 3:
+        lcd.setCursor(0, 0);
+        lcd.print("PM2.5:");
+        lcd.setCursor(0, 1);
+        lcd.print(pm2_5_ATM);
+        lcd.print(" ug/m3");
+        break;
+      case 4:
+        lcd.setCursor(0, 0);
+        lcd.print("PM10:");
+        lcd.setCursor(0, 1);
+        lcd.print(pm10_ATM);
+        lcd.print(" ug/m3");
+        break;
+    }
+    lcdState++;
+    if (lcdState > 4) lcdState = 0;
+    lastLcdSwitch = now;
   }
 }
 

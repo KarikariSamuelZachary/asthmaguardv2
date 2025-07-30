@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile/providers/auth_provider.dart' as my_auth;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -38,6 +39,9 @@ class _SignupScreenState extends State<SignupScreen> {
     try {
       await Provider.of<my_auth.AuthProvider>(context, listen: false).signUp(
           _emailController.text.trim(), _passwordController.text.trim());
+      // Save full name to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('fullName', _nameController.text.trim());
       setState(() => _isLoading = false);
       // After successful signup, go to OTP screen (or dashboard if you prefer)
       Navigator.pushReplacementNamed(

@@ -1,0 +1,57 @@
+# Flutter/Dart/Pub related
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter-versions
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.swp
+*.lock
+*.log
+*.tmp
+*.temp
+*.DS_Store
+*.class
+*.jar
+*.war
+*.ear
+*.pyc
+*.pyo
+*.pyd
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# Android
+android/.gradle/
+android/app/build/
+android/local.properties
+# iOS
+ios/Pods/
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/app.flx
+ios/Flutter/ephemeral/
+ios/Flutter/Flutter.podspec
+# Web
+web/.dart_tool/
+# Linux
+linux/flutter/
+# MacOS
+macos/Flutter/
+# Windows
+windows/flutter/
+# Firebase
+**/google-services.json
+**/GoogleService-Info.plist
+# Others
+.env
+.env.*

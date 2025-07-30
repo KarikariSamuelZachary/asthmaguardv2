@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile/screens/health_report/widgets/health_report_modal.dart'; // Adjusted import path
 
 class HealthReportScreen extends StatelessWidget {
@@ -14,12 +13,7 @@ class HealthReportScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          // Added back button
-          icon: Icon(Icons.arrow_back,
-              color: isDark ? Colors.white : const Color(0xFF333333)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: false,
         title: Text(
           'Health Report',
           style: TextStyle(
@@ -52,61 +46,84 @@ class HealthReportScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Stack(
                 children: [
-                  Text(
-                    'Average Temperature',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF333333),
+                  Positioned(
+                    top: -20,
+                    right: -20,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        'Average Temperature',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              isDark ? Colors.white : const Color(0xFF333333),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '30',
-                            style: TextStyle(
-                              fontSize: 64,
-                              fontWeight: FontWeight.bold,
-                              color: isDark
-                                  ? Colors.grey[300]
-                                  : Colors.grey[700], // Adjusted for dark mode
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Text(
-                              '°C',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? Colors.grey[300]
-                                    : Colors
-                                        .grey[700], // Adjusted for dark mode
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '30',
+                                style: TextStyle(
+                                  fontSize: 64,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark
+                                      ? Colors.grey[300]
+                                      : Colors
+                                          .grey[700], // Adjusted for dark mode
+                                ),
                               ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Text(
+                                  '°C',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.grey[300]
+                                        : Colors.grey[
+                                            700], // Adjusted for dark mode
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Icon(
+                            Icons.thermostat,
+                            size: 80,
+                            color: Color(0xFFD32F2F),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(
+                              Icons.thermostat, // Better icon for temperature
+                              size: 28,
+                              color: Colors.red,
                             ),
                           ),
                         ],
-                      ),
-                      SvgPicture.asset(
-                        'assets/images/temp.svg', // Ensure this asset exists
-                        width: 80,
-                        height: 80,
-                        colorFilter: ColorFilter.mode(
-                          isDark
-                              ? Colors.red.shade300
-                              : const Color(
-                                  0xFFD32F2F), // Adjusted for dark mode
-                          BlendMode.srcIn,
-                        ),
                       ),
                     ],
                   ),
@@ -136,58 +153,56 @@ class HealthReportScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SvgPicture.asset(
-                              'assets/images/humidity-in.svg', // Ensure this asset exists
-                              width: 24,
-                              height: 24,
-                              colorFilter: ColorFilter.mode(
-                                isDark
-                                    ? Colors.blue.shade300
-                                    : const Color(
-                                        0xFF1976D2), // Adjusted for dark mode
-                                BlendMode.srcIn,
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(
+                                Icons.sick, // Better icon for symptoms
+                                size: 28,
+                                color: Colors.blue,
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              'Humidity',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: isDark
-                                    ? Colors.white70
-                                    : Colors.black87, // Adjusted for dark mode
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Symptom',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black87,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Frequency',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black87,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '58.8',
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? Colors.grey[300]
-                                    : Colors
-                                        .grey[700], // Adjusted for dark mode
-                              ),
-                            ),
-                            Text(
-                              ' %',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? Colors.grey[300]
-                                    : Colors
-                                        .grey[700], // Adjusted for dark mode
-                              ),
-                            ),
-                          ],
+                        Text(
+                          '3',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
+                          ),
                         ),
                       ],
                     ),
@@ -214,27 +229,44 @@ class HealthReportScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SvgPicture.asset(
-                              'assets/images/steps.svg', // Ensure this asset exists
-                              width: 24,
-                              height: 24,
-                              colorFilter: ColorFilter.mode(
-                                isDark
-                                    ? Colors.orange.shade300
-                                    : const Color(
-                                        0xFFF57C00), // Adjusted for dark mode
-                                BlendMode.srcIn,
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade50,
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(
+                                Icons.directions_walk, // Better icon for steps
+                                size: 28,
+                                color: Colors.orange,
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              'Steps',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: isDark
-                                    ? Colors.white70
-                                    : Colors.black87, // Adjusted for dark mode
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Steps',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black87,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Today',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black87,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -245,9 +277,7 @@ class HealthReportScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? Colors.grey[300]
-                                : Colors.grey[700], // Adjusted for dark mode
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
                           ),
                         ),
                       ],
@@ -262,7 +292,7 @@ class HealthReportScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : const Color(0xFF333333),
+                color: const Color(0xFF4285F4), // Blue color
               ),
             ),
             const SizedBox(height: 16),

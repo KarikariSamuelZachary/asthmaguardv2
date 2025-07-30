@@ -13,6 +13,8 @@ import 'package:mobile/screens/settings/settings_tab.dart';
 import 'package:mobile/screens/sensors/live_sensor_screen.dart';
 import 'package:mobile/screens/profile/profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+import 'package:mobile/services/alert_notification_service.dart';
 
 // Helper function to get color based on PM2.5 air quality value
 Color getAirQualityColor(int? pm25) {
@@ -35,10 +37,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
-  double? _temperature;
-  double? _pressure;
-  int? _pm25; // For PM2.5 readings
-  int? _pm10; // For PM10 readings
+  double _temperature = 23.0;
+  double _pressure = 1012.0;
+  int _pm25 = 10;
+  int _pm10 = 15;
   BluetoothDevice? _device;
   BluetoothCharacteristic? _tempChar;
   BluetoothCharacteristic? _pressureChar;
@@ -50,11 +52,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Stream<List<int>>? _pm10Stream; // For PM10 stream;
   String _fullName = 'User';
 
+  final Random _random = Random();
+  Timer? _demoTimer;
+
+  // Add this for notification service
+  final _alertService = AlertNotificationService();
+  bool _alertedPM25 = false;
+  bool _alertedPM10 = false;
+  bool _alertedPM1 = false;
+
   @override
   void initState() {
     super.initState();
+    _alertService.init();
     _connectAndSubscribeBLE();
     _loadFullName();
+    _demoTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      setState(() {
+        // Simulate increasing PM values
+        _pm25 += 2;
+        _pm10 += 3;
+        // Simulate PM1 as well (if needed)
+        // Clamp values to reasonable ranges
+        _pm25 = _pm25.clamp(5, 200);
+        _pm10 = _pm10.clamp(10, 300);
+        // Optionally, simulate PM1
+        // _pm1 = (_pm1 ?? 10) + 1;
+        // _pm1 = _pm1.clamp(5, 100);
+        _temperature += (_random.nextDouble() - 0.5) * 0.3;
+        _pressure += (_random.nextDouble() - 0.5) * 0.8;
+        _temperature = _temperature.clamp(18.0, 28.0);
+        _pressure = _pressure.clamp(990.0, 1030.0);
+      });
+      // Notification logic
+      if (_pm25 > 35 && !_alertedPM25) {
+        _alertedPM25 = true;
+        _alertService.showAlert(
+          title: 'Air Quality Alert',
+          body: 'PM2.5 levels are high ($_pm25 μg/m³)!',
+          level: AlertLevel.warning,
+          alertType: 'pm25',
+        );
+      }
+      if (_pm10 > 50 && !_alertedPM10) {
+        _alertedPM10 = true;
+        _alertService.showAlert(
+          title: 'Air Quality Alert',
+          body: 'PM10 levels are high ($_pm10 μg/m³)!',
+          level: AlertLevel.warning,
+          alertType: 'pm10',
+        );
+      }
+      // Optionally, PM1 notification
+      // if ((_pm1 ?? 0) > 30 && !_alertedPM1) {
+      //   _alertedPM1 = true;
+      //   _alertService.showAlert(
+      //     title: 'Air Quality Alert',
+      //     body: 'PM1 levels are high (${_pm1 ?? 0} μg/m³)!',
+      //     level: AlertLevel.warning,
+      //     alertType: 'pm1',
+      //   );
+      // }
+    });
   }
 
   Future<void> _loadFullName() async {
@@ -209,9 +268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Calculate approximate humidity from temperature and pressure
   // This uses a simplified approach based on the Magnus formula
-  double _calculateApproximateHumidity(double? temperature, double? pressure) {
-    if (temperature == null || pressure == null) return 0.0;
-
+  double _calculateApproximateHumidity(double temperature, double pressure) {
     // Constants for Magnus formula
     const a = 17.27;
     const b = 237.7; // °C
@@ -234,6 +291,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   void dispose() {
+    _demoTimer?.cancel();
     // Clean up BLE connection when widget is disposed
     if (_device != null && _device!.isConnected) {
       print("Disconnecting from Nano33BLESense");
@@ -245,9 +303,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     // Calculate the approximate humidity
-    double? humidity = (_temperature != null && _pressure != null)
-        ? _calculateApproximateHumidity(_temperature, _pressure)
-        : null;
+    double humidity = _calculateApproximateHumidity(_temperature, _pressure);
     final List<Widget> _screens = [
       _HomeDashboard(
         temperature: _temperature,
@@ -267,17 +323,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       const HealthReportScreen(),
       const SettingsTab(),
     ];
-    final now = DateTime.now();
-    final String formattedDate = DateFormat('EEEE, MMMM d').format(now);
 
     return Scaffold(
       appBar: _selectedIndex == 0
           ? AppBar(
               elevation: 0,
               backgroundColor: Colors.transparent,
-              title: Text(
-                'Hi, $_fullName',
-                style: const TextStyle(
+              title: const Text(
+                'Hi, Samuel',
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue,
@@ -314,10 +368,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             )
           : null,
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
+      body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
@@ -328,7 +379,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _selectedIndex = index;
           });
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             label: 'Home',
@@ -401,18 +452,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 // Extracted Home dashboard content to a separate widget for cleaner tab switching
 class _HomeDashboard extends StatelessWidget {
-  final double? temperature;
-  final double? pressure;
-  final double? humidity;
-  final int? pm25;
-  final int? pm10;
+  final double temperature;
+  final double pressure;
+  final double humidity;
+  final int pm25;
+  final int pm10;
+
   const _HomeDashboard({
     Key? key,
-    this.temperature,
-    this.pressure,
-    this.humidity,
-    this.pm25,
-    this.pm10,
+    required this.temperature,
+    required this.pressure,
+    required this.humidity,
+    required this.pm25,
+    required this.pm10,
   }) : super(key: key);
 
   @override
@@ -513,8 +565,7 @@ class _HomeDashboard extends StatelessWidget {
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount:
-                  2, // Changed to 2 columns for better layout with 4 tiles
+              crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               childAspectRatio: 1.3,
@@ -522,31 +573,25 @@ class _HomeDashboard extends StatelessWidget {
                 SensorTile(
                   icon: Icons.thermostat,
                   label: 'Temperature',
-                  value: temperature != null
-                      ? '${temperature!.toStringAsFixed(2)} °C'
-                      : 'N/A',
+                  value: '${temperature.toStringAsFixed(2)} °C',
                   color: Colors.orangeAccent,
                 ),
                 SensorTile(
                   icon: Icons.speed,
                   label: 'Pressure',
-                  value: pressure != null
-                      ? '${pressure!.toStringAsFixed(2)} hPa'
-                      : 'N/A',
+                  value: '${pressure.toStringAsFixed(2)} hPa',
                   color: Colors.purple,
                 ),
                 SensorTile(
                   icon: Icons.water_drop,
                   label: 'Humidity',
-                  value: humidity != null
-                      ? '${humidity!.toStringAsFixed(2)}%'
-                      : 'N/A',
+                  value: '${humidity.toStringAsFixed(2)}%',
                   color: Colors.blue,
                 ),
                 SensorTile(
                   icon: Icons.air,
                   label: 'Air Quality',
-                  value: pm25 != null ? '${pm25} μg/m³' : 'N/A',
+                  value: '$pm25 μg/m³',
                   color: getAirQualityColor(pm25),
                 ),
               ],
@@ -570,18 +615,14 @@ class _HomeDashboard extends StatelessWidget {
               childAspectRatio: 1.1,
               children: [
                 DashboardCard(
-                  context,
                   title: 'Health Tips',
                   icon: Icons.lightbulb_outline,
-                  imagePath: 'assets/images/health_tips.png',
                   color: Colors.orangeAccent,
                   onTap: () => Navigator.pushNamed(context, '/health-tips'),
                 ),
                 DashboardCard(
-                  context,
                   title: 'Wellness Hub',
                   icon: Icons.self_improvement,
-                  imagePath: 'assets/images/wellness_hub.png',
                   color: Colors.teal,
                   onTap: () => Navigator.push(
                     context,
@@ -589,10 +630,8 @@ class _HomeDashboard extends StatelessWidget {
                   ),
                 ),
                 DashboardCard(
-                  context,
                   title: 'BMR Calculator',
                   icon: Icons.calculate,
-                  imagePath: 'assets/images/bmr_calculator.png',
                   color: Colors.blueAccent,
                   onTap: () => Navigator.push(
                     context,
@@ -600,28 +639,22 @@ class _HomeDashboard extends StatelessWidget {
                   ),
                 ),
                 DashboardCard(
-                  context,
                   title: 'Exercise Routines',
                   icon: Icons.fitness_center,
-                  imagePath: 'assets/images/exercise_routines.png',
                   color: Colors.green,
                   onTap: () =>
                       Navigator.pushNamed(context, '/exercise-routines'),
                 ),
                 DashboardCard(
-                  context,
                   title: 'Medication Tracker',
                   icon: Icons.medication,
-                  imagePath: 'assets/images/medication_tracker.png',
                   color: Colors.purple,
                   onTap: () =>
                       Navigator.pushNamed(context, '/medication-tracker'),
                 ),
                 DashboardCard(
-                  context,
                   title: 'Log Symptoms',
                   icon: Icons.sick,
-                  imagePath: 'assets/images/log_symptoms.png',
                   color: Colors.redAccent,
                   onTap: () => showDialog(
                     context: context,
@@ -638,20 +671,18 @@ class _HomeDashboard extends StatelessWidget {
 }
 
 class DashboardCard extends StatelessWidget {
-  const DashboardCard(
-    this.context, {
+  const DashboardCard({
     super.key,
     required this.title,
     required this.icon,
-    required this.imagePath,
+    this.imagePath,
     required this.color,
     required this.onTap,
   });
 
-  final BuildContext context;
   final String title;
   final IconData icon;
-  final String imagePath;
+  final String? imagePath;
   final Color color;
   final VoidCallback onTap;
 
@@ -688,15 +719,18 @@ class DashboardCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    imagePath,
-                    height: 48,
-                    width: 48,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(icon, size: 40, color: color);
-                    },
-                  ),
+                  if (imagePath != null)
+                    Image.asset(
+                      imagePath!,
+                      height: 48,
+                      width: 48,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(icon, size: 40, color: color);
+                      },
+                    )
+                  else
+                    Icon(icon, size: 40, color: color),
                   const SizedBox(height: 14),
                   Text(
                     title,

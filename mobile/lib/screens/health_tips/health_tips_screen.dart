@@ -15,7 +15,6 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
   final HealthTipsService _healthTipsService = HealthTipsService();
 
   List<HealthTip> _tips = [];
-  HealthTip? _featuredTip;
 
   String _selectedCategory = 'all';
   String _searchQuery = '';
@@ -43,6 +42,13 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
         _loadHealthTips(isInitialLoad: true); // Fetch new search results
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Shuffle tips each time the screen is opened for variety
+    _tips.shuffle();
   }
 
   @override
@@ -77,7 +83,6 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
       if (mounted) {
         setState(() {
           if (isInitialLoad) {
-            _featuredTip = data['featured'] as HealthTip?;
             _tips = data['tips'] as List<HealthTip>;
           } else {
             _tips.addAll(data['tips'] as List<HealthTip>);
@@ -157,10 +162,10 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
               child: CustomScrollView(
                 slivers: [
                   _buildSearchSliver(isDark),
-                  if (_featuredTip != null &&
+                  if (_tips.isNotEmpty &&
                       _searchQuery.isEmpty &&
                       _selectedCategory == 'all')
-                    _buildFeaturedTipSliver(_featuredTip!, isDark),
+                    _buildFeatureBoardSliver(isDark),
                   _buildCategoriesSliver(isDark),
                   _buildTipsGridSliver(isDark),
                   if (_isLoadingMore)
@@ -241,73 +246,95 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
     );
   }
 
-  Widget _buildFeaturedTipSliver(HealthTip featuredTip, bool isDark) {
+  // Add this method to build the feature board
+  Widget _buildFeatureBoardSliver(bool isDark) {
+    // Pick 2–3 random tips with images
+    final List<HealthTip> imageTips = _tips
+        .where((tip) => tip.imageUrl != null && tip.imageUrl!.isNotEmpty)
+        .toList();
+    if (imageTips.isEmpty)
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    imageTips.shuffle();
+    final featureBoardTips = imageTips.take(3).toList();
+
     return SliverToBoxAdapter(
-      child: GestureDetector(
-        onTap: () => _launchURL(featuredTip.url),
-        child: Container(
-          height: 220,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            image: featuredTip.imageUrl != null
-                ? DecorationImage(
-                    image: NetworkImage(featuredTip.imageUrl!),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(
-                        Colors.black.withOpacity(0.4), BlendMode.darken),
-                  )
-                : null,
-            color: featuredTip.imageUrl == null
-                ? (isDark ? Colors.grey[800] : Colors.blueGrey[100])
-                : null,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
+      child: Container(
+        margin: const EdgeInsets.only(top: 8, bottom: 8),
+        height: 170,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: featureBoardTips.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 16),
+          itemBuilder: (context, idx) {
+            final tip = featureBoardTips[idx];
+            return GestureDetector(
+              onTap: () => _launchURL(tip.url),
+              child: Container(
+                width: 260,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.13),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                  image: tip.imageUrl != null
+                      ? DecorationImage(
+                          image: NetworkImage(tip.imageUrl!),
+                          fit: BoxFit.cover,
+                          colorFilter: ColorFilter.mode(
+                              Colors.black.withOpacity(0.32), BlendMode.darken),
+                        )
+                      : null,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        tip.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          shadows: [
+                            Shadow(
+                                blurRadius: 2,
+                                color: Colors.black54,
+                                offset: Offset(1, 1)),
+                          ],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        tip.description,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          shadows: [
+                            Shadow(
+                                blurRadius: 1,
+                                color: Colors.black38,
+                                offset: Offset(1, 1)),
+                          ],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  featuredTip.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(
-                          blurRadius: 2,
-                          color: Colors.black54,
-                          offset: Offset(1, 1))
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  featuredTip.description,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                    shadows: [
-                      Shadow(
-                          blurRadius: 1,
-                          color: Colors.black38,
-                          offset: Offset(1, 1))
-                    ],
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

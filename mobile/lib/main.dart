@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 import 'package:mobile/screens/auth/dashboard_screen.dart';
 import 'package:mobile/screens/auth/forgotpassword_screen.dart';
 import 'package:mobile/screens/auth/login_screen.dart';
@@ -19,14 +21,29 @@ import 'package:mobile/providers/auth_provider.dart';
 import 'package:mobile/providers/emergency_contact_provider.dart';
 import 'package:mobile/providers/medication_provider.dart';
 import 'package:mobile/providers/symptom_log_provider.dart';
-import 'package:mobile/screens/onboarding/onboarding_screen1.dart';
-import 'package:mobile/screens/onboarding/onboarding_screen2.dart';
+import 'package:mobile/providers/theme_provider.dart';
+import 'package:mobile/screens/onboarding/onboarding_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mobile/services/alert_notification_service.dart';
+
+Future<void> requestNotificationPermissionIfNeeded() async {
+  if (Platform.isAndroid) {
+    final status = await Permission.notification.status;
+    if (!status.isGranted) {
+      await Permission.notification.request();
+    }
+  }
+}
+
+final alertNotificationService = AlertNotificationService();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await dotenv.load(fileName: ".env");
+  await alertNotificationService.init();
+  await requestNotificationPermissionIfNeeded();
   runApp(
     MultiProvider(
       providers: [
@@ -34,6 +51,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => EmergencyContactProvider()),
         ChangeNotifierProvider(create: (_) => MedicationProvider()),
         ChangeNotifierProvider(create: (_) => SymptomLogProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         // Add other providers here if needed
       ],
       child: const MyApp(),
@@ -46,34 +64,45 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      initialRoute: '/splash', // Set splash as the default screen
-      routes: {
-        '/splash': (context) => const SplashScreen(),
-        '/signup': (context) => const SignupScreen(),
-        '/otp': (context) => const OtpVerificationScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/welcome': (context) => const WelcomeScreen(),
-        '/dashboard': (context) => const DashboardScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/pollution-tracker': (context) => const PollutionTrackerScreen(),
-        '/forgot-password': (context) =>
-            const ForgotPasswordScreen(), // Add route for forgot password
-        '/health-report': (context) =>
-            const HealthReportScreen(), // Corrected to HealthReportScreen
-        '/health-tips': (context) =>
-            const HealthTipsScreen(), // Add HealthTipsScreen route
-        '/exercise-routines': (context) => const ExerciseRoutines(),
-        '/medication-tracker': (context) => const MedicationTrackerScreen(),
-        '/onboarding1': (context) => const OnboardingScreen1(),
-        '/onboarding2': (context) => const OnboardingScreen2(),
-        '/profile': (context) => const ProfileScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        return MaterialApp(
+          title: 'Flutter Demo',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.light,
+            ),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          themeMode: themeProvider.themeMode,
+          initialRoute: '/splash',
+          routes: {
+            '/splash': (context) => const SplashScreen(),
+            '/signup': (context) => const SignupScreen(),
+            '/otp': (context) => const EmailVerificationScreen(),
+            '/login': (context) => const LoginScreen(),
+            '/welcome': (context) => const WelcomeScreen(),
+            '/dashboard': (context) => const DashboardScreen(),
+            '/home': (context) => const HomeScreen(),
+            '/pollution-tracker': (context) => const PollutionTrackerScreen(),
+            '/forgot-password': (context) => const ForgotPasswordScreen(),
+            '/health-report': (context) => const HealthReportScreen(),
+            '/health-tips': (context) => const HealthTipsScreen(),
+            '/exercise-routines': (context) => const ExerciseRoutines(),
+            '/medication-tracker': (context) => const MedicationTrackerScreen(),
+            '/onboarding': (context) => const OnboardingScreen(),
+            '/profile': (context) => const ProfileScreen(),
+          },
+        );
       },
     );
   }

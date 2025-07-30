@@ -1,66 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/services/alert_notification_service.dart';
+
+final alertNotificationService = AlertNotificationService();
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, String>> notifications = [
-      {
-        'title': 'Medication Reminder',
-        'body': 'Time to take your controller inhaler.',
-        'time': '5 min ago',
-      },
-      {
-        'title': 'High Pollen Alert',
-        'body': 'Pollen count is high in your area today.',
-        'time': '1 hr ago',
-      },
-      {
-        'title': 'Health Report Ready',
-        'body': 'Your weekly health report is now available.',
-        'time': 'Yesterday',
-      },
-    ];
+    final notifications = alertNotificationService.notificationLog;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
-        backgroundColor: Colors.teal,
+        title: const Text(
+          'Notifications',
+          style: TextStyle(
+            color: Color(0xFF4285F4), // Blue
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: notifications.isEmpty
-          ? const Center(
-              child: Text('No notifications yet.'),
-            )
+          ? const Center(child: Text('No notifications yet.'))
           : ListView.separated(
-              padding: const EdgeInsets.all(16),
               itemCount: notifications.length,
-              separatorBuilder: (context, index) => const Divider(),
+              separatorBuilder: (_, __) => const Divider(),
               itemBuilder: (context, index) {
-                final notification = notifications[index];
+                final n = notifications[index];
                 return ListTile(
-                  leading: const Icon(Icons.notifications_active, color: Colors.teal),
-                  title: Text(notification['title'] ?? ''),
-                  subtitle: Text(notification['body'] ?? ''),
+                  leading: Icon(
+                    Icons.notifications_active,
+                    color: n['level'] == AlertLevel.danger
+                        ? Colors.red
+                        : n['level'] == AlertLevel.warning
+                            ? Colors.orange
+                            : Colors.blue,
+                  ),
+                  title: Text(n['title'] ?? ''),
+                  subtitle: Text(n['body'] ?? ''),
                   trailing: Text(
-                    notification['time'] ?? '',
+                    n['timestamp'] != null
+                        ? (n['timestamp'] as DateTime)
+                            .toLocal()
+                            .toString()
+                            .substring(0, 16)
+                        : '',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text(notification['title'] ?? ''),
-                        content: Text(notification['body'] ?? ''),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Close'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
                 );
               },
             ),

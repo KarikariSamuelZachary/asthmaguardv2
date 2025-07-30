@@ -26,11 +26,36 @@ class _ExerciseRoutinesState extends State<ExerciseRoutines> {
   ];
 
   final workoutCategories = [
-    {'id': 'warmup', 'icon': Icons.favorite, 'label': 'Warm-Up'},
-    {'id': 'cardio', 'icon': Icons.local_fire_department, 'label': 'Cardio'},
-    {'id': 'strength', 'icon': Icons.fitness_center, 'label': 'Strength'},
-    {'id': 'hiit', 'icon': Icons.timer, 'label': 'HIIT'},
-    {'id': 'cooldown', 'icon': Icons.ac_unit, 'label': 'Cool Down'},
+    {
+      'id': 'warmup',
+      'icon': Icons.favorite,
+      'label': 'Warm-Up',
+      'color': Colors.pink
+    },
+    {
+      'id': 'cardio',
+      'icon': Icons.local_fire_department,
+      'label': 'Cardio',
+      'color': Colors.orange
+    },
+    {
+      'id': 'strength',
+      'icon': Icons.fitness_center,
+      'label': 'Strength',
+      'color': Colors.blue
+    },
+    {
+      'id': 'hiit',
+      'icon': Icons.flash_on,
+      'label': 'HIIT',
+      'color': Colors.amber
+    },
+    {
+      'id': 'cooldown',
+      'icon': Icons.ac_unit,
+      'label': 'Cool Down',
+      'color': Colors.cyan
+    },
   ];
 
   final Map<String, YoutubePlayerController> _videoControllers = {};
@@ -171,7 +196,6 @@ class _ExerciseRoutinesState extends State<ExerciseRoutines> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 24),
                             GridView.count(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
@@ -191,7 +215,7 @@ class _ExerciseRoutinesState extends State<ExerciseRoutines> {
                                   isDark: isDark,
                                 ),
                                 _buildStatsCard(
-                                  icon: Icons.timer,
+                                  icon: Icons.schedule,
                                   title: 'Workout Time',
                                   value: '45 mins',
                                   color: Colors.brown,
@@ -280,9 +304,8 @@ class _ExerciseRoutinesState extends State<ExerciseRoutines> {
                                               color: selectedCategory ==
                                                       category['id']
                                                   ? Colors.white
-                                                  : isDark
-                                                      ? Colors.white
-                                                      : Colors.black,
+                                                  : (category['color'] ??
+                                                      Colors.black) as Color,
                                             ),
                                           ),
                                         ),
@@ -334,41 +357,37 @@ class _ExerciseRoutinesState extends State<ExerciseRoutines> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF007AFF),
-            Color(0xFF00C6FF),
-          ],
-        ),
+        color: const Color(0xFFF0F6FF), // Very light blue
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
+      constraints: const BoxConstraints(
+          minHeight: 110, maxHeight: 130), // Reduce min/max height
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
+          Icon(icon, color: color, size: 28), // Slightly smaller icon
+          const SizedBox(height: 6),
           Text(
             value,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 16, // Reduced font size
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black,
+              color: isDark ? Colors.black : Colors.black,
             ),
           ),
           Text(
             title,
             style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white70 : Colors.black54,
+              fontSize: 11, // Reduced font size
+              color: isDark ? Colors.black54 : Colors.black54,
             ),
             textAlign: TextAlign.center,
           ),
@@ -459,15 +478,18 @@ class _ExerciseRoutinesState extends State<ExerciseRoutines> {
                         const Icon(Icons.local_fire_department,
                             color: Colors.orange, size: 20),
                         const SizedBox(width: 4),
-                        Text('${exercise.calories} kcal'),
+                        Text('${exercise.calories} kcal',
+                            style: TextStyle(color: Colors.orange)),
                       ],
                     ),
                     const SizedBox(width: 16),
                     Row(
                       children: [
-                        const Icon(Icons.timer, size: 20),
+                        const Icon(Icons.schedule,
+                            size: 20, color: Color(0xFF4285F4)),
                         const SizedBox(width: 4),
-                        Text('${exercise.duration ~/ 60} min'),
+                        Text('${exercise.duration ~/ 60} min',
+                            style: TextStyle(color: Color(0xFF4285F4))),
                       ],
                     ),
                     const Spacer(),

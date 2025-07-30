@@ -38,12 +38,19 @@ dependencies:
   just_audio: ^0.9.36
   youtube_player_iframe: ^4.0.4 # Added youtube_player_iframe for YouTube video support
   shared_preferences: ^2.2.2 # Added for persistent storage
-  firebase_core: ^3.15.1 
-  firebase_auth: ^5.6.2
+  firebase_core: ^3.15.1  
+  firebase_auth: ^5.6.2  
   flutter_blue_plus: ^1.35.5
   permission_handler: ^12.0.1
   app_settings: ^6.1.1
-
+  geolocator: ^10.1.0
+  share_plus: ^11.0.0
+  pdf: ^3.11.3
+  google_maps_flutter: ^2.5.0
+  flutter_local_notifications: ^17.0.0
+  smooth_page_indicator: ^1.2.1
+  cloud_firestore: ^5.6.12
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

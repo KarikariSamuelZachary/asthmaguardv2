@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class BMRCalculator extends StatefulWidget {
   const BMRCalculator({super.key});
@@ -24,13 +30,18 @@ class _BMRCalculatorState extends State<BMRCalculator> {
     'calories': 0
   };
   Map<String, double> _idealWeight = {'min': 0, 'max': 0};
+  bool _isMetric = false;
+  List<Map<String, dynamic>> _history = [];
 
   void _calculateBMR() {
     if (_formKey.currentState!.validate()) {
       final age = int.parse(_ageController.text);
-      final weight =
-          double.parse(_weightController.text) * 0.453592; // lbs to kg
-      final height = double.parse(_heightController.text) * 2.54; // in to cm
+      final weight = _isMetric
+          ? double.parse(_weightController.text)
+          : double.parse(_weightController.text) * 0.453592; // lbs to kg
+      final height = _isMetric
+          ? double.parse(_heightController.text)
+          : double.parse(_heightController.text) * 2.54; // in to cm
 
       setState(() {
         if (_gender == 'male') {
@@ -43,6 +54,59 @@ class _BMRCalculatorState extends State<BMRCalculator> {
         _idealWeight = _calculateIdealWeight(height, _gender);
       });
     }
+  }
+
+  void _saveResult() {
+    final now = DateTime.now();
+    setState(() {
+      _history.insert(0, {
+        'date': now,
+        'bmr': _bmr,
+        'tdee': _tdee,
+        'goal': _goal,
+        'macros': Map<String, double>.from(_macros),
+      });
+    });
+  }
+
+  void _shareResult() async {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text('BMR & Nutrition Plan',
+                style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.blue)),
+            pw.SizedBox(height: 16),
+            pw.Text('BMR: ${_bmr.round()} kcal',
+                style: pw.TextStyle(fontSize: 18)),
+            pw.Text('TDEE: ${_tdee.round()} kcal',
+                style: pw.TextStyle(fontSize: 18)),
+            pw.Text('Goal: $_goal', style: pw.TextStyle(fontSize: 18)),
+            pw.SizedBox(height: 12),
+            pw.Text('Macros:',
+                style:
+                    pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.Text('  Protein: ${_macros['protein']}g'),
+            pw.Text('  Carbs:   ${_macros['carbs']}g'),
+            pw.Text('  Fat:     ${_macros['fat']}g'),
+            pw.SizedBox(height: 12),
+            pw.Text(
+                'Ideal Weight Range: ${_idealWeight['min']} - ${_idealWeight['max']} kg',
+                style: pw.TextStyle(fontSize: 16)),
+          ],
+        ),
+      ),
+    );
+    final output = await getTemporaryDirectory();
+    final file = File('${output.path}/bmr_result.pdf');
+    await file.writeAsBytes(await pdf.save());
+    await Share.shareXFiles([XFile(file.path)],
+        subject: 'My BMR & Nutrition Plan');
   }
 
   double _calculateTDEE(double bmr, String activityLevel) {
@@ -91,12 +155,109 @@ class _BMRCalculatorState extends State<BMRCalculator> {
     };
   }
 
+  Widget _buildMacroBarChart() {
+    final maxVal = [
+      _macros['protein'] ?? 0,
+      _macros['carbs'] ?? 0,
+      _macros['fat'] ?? 0
+    ].reduce((a, b) => a > b ? a : b);
+    if (maxVal == 0) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Macros Breakdown',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _buildBar('Protein', _macros['protein']!, maxVal, Colors.blue),
+              const SizedBox(width: 8),
+              _buildBar('Carbs', _macros['carbs']!, maxVal, Colors.green),
+              const SizedBox(width: 8),
+              _buildBar('Fat', _macros['fat']!, maxVal, Colors.orange),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBar(String label, double value, double max, Color color) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            height: 80,
+            alignment: Alignment.bottomCenter,
+            child: FractionallySizedBox(
+              heightFactor: value / max,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                width: 24,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text('${value.round()}g',
+              style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistory() {
+    if (_history.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 32),
+        const Text('History',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        const SizedBox(height: 8),
+        ..._history.map((entry) {
+          final date = DateFormat('MMM d, yyyy – HH:mm').format(entry['date']);
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ListTile(
+              title: Text(
+                  'BMR: ${entry['bmr'].round()} | TDEE: ${entry['tdee'].round()}'),
+              subtitle: Text('Goal: ${entry['goal']} | $date'),
+              trailing: IconButton(
+                icon: const Icon(Icons.share, color: Color(0xFF4285F4)),
+                onPressed: () {
+                  final macros = entry['macros'];
+                  final summary =
+                      'BMR: ${entry['bmr'].round()} kcal\nTDEE: ${entry['tdee'].round()} kcal\nGoal: ${entry['goal']}\nMacros: Protein ${macros['protein']}g, Carbs ${macros['carbs']}g, Fat ${macros['fat']}g';
+                  Share.share(summary, subject: 'My BMR & Nutrition Plan');
+                },
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BMR Calculator'),
-        backgroundColor: Colors.teal,
+        title: const Text(
+          'BMR Calculator',
+          style: TextStyle(
+            color: Color(0xFF4285F4),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Color(0xFF4285F4)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -105,6 +266,27 @@ class _BMRCalculatorState extends State<BMRCalculator> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text('Metric',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: _isMetric ? Colors.blue : Colors.grey)),
+                  Switch(
+                    value: _isMetric,
+                    onChanged: (val) {
+                      setState(() => _isMetric = val);
+                      _weightController.clear();
+                      _heightController.clear();
+                    },
+                  ),
+                  Text('Imperial',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: !_isMetric ? Colors.blue : Colors.grey)),
+                ],
+              ),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -153,8 +335,9 @@ class _BMRCalculatorState extends State<BMRCalculator> {
                       TextFormField(
                         controller: _weightController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                            labelText: 'Weight', suffixText: 'lbs'),
+                        decoration: InputDecoration(
+                            labelText: 'Weight',
+                            suffixText: _isMetric ? 'kg' : 'lbs'),
                         validator: (value) => value == null || value.isEmpty
                             ? 'Please enter your weight'
                             : null,
@@ -163,8 +346,9 @@ class _BMRCalculatorState extends State<BMRCalculator> {
                       TextFormField(
                         controller: _heightController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                            labelText: 'Height', suffixText: 'inches'),
+                        decoration: InputDecoration(
+                            labelText: 'Height',
+                            suffixText: _isMetric ? 'cm' : 'inches'),
                         validator: (value) => value == null || value.isEmpty
                             ? 'Please enter your height'
                             : null,
@@ -234,8 +418,12 @@ class _BMRCalculatorState extends State<BMRCalculator> {
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: _calculateBMR,
-                style:
-                    FilledButton.styleFrom(padding: const EdgeInsets.all(16)),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.all(16),
+                  backgroundColor: const Color(0xFF4285F4),
+                  foregroundColor: Colors.white,
+                  textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 child: const Text('Calculate BMR'),
               ),
               const SizedBox(height: 24),
@@ -244,6 +432,8 @@ class _BMRCalculatorState extends State<BMRCalculator> {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment
+                          .start, // Align all result texts left
                       children: [
                         const Text('Your Basal Metabolic Rate (BMR)',
                             style: TextStyle(fontWeight: FontWeight.bold)),
@@ -262,13 +452,59 @@ class _BMRCalculatorState extends State<BMRCalculator> {
                             'Ideal Weight Range: ${_idealWeight['min']} - ${_idealWeight['max']} kg',
                             style: const TextStyle(fontSize: 18)),
                         const SizedBox(height: 16),
-                        Text(
-                            'Recommended Macros: Protein: ${_macros['protein']}g, Carbs: ${_macros['carbs']}g, Fat: ${_macros['fat']}g',
+                        Text('Recommended Macros:',
                             style: const TextStyle(fontSize: 18)),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Protein:  9${_macros['protein']}g\nCarbs:   ${_macros['carbs']}g\nFat:     ${_macros['fat']}g',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        _buildMacroBarChart(),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                _saveResult();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text('Result saved to history!')),
+                                );
+                              },
+                              icon: const Icon(Icons.save),
+                              label: const Text('Save Result'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                try {
+                                  _shareResult();
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text('Failed to share: $e')),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.share),
+                              label: const Text('Share Result'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFF4285F4),
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
                 ),
+              _buildHistory(),
             ],
           ),
         ),

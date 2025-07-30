@@ -22,7 +22,13 @@ class _MedicationTrackerScreenState extends State<MedicationTrackerScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medication Tracker'),
+        title: const Text(
+          'Medication Tracker',
+          style: TextStyle(
+            color: Color(0xFF4285F4), // Blue color
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         foregroundColor: isDark ? Colors.white : Colors.black,
         elevation: 0,
@@ -83,11 +89,11 @@ class _MedicationTrackerScreenState extends State<MedicationTrackerScreen> {
       child: Column(
         children: [
           Text(
-            'Today\'s Overview',
-            style: TextStyle(
+            "Today's Overview",
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black,
+              color: Color(0xFF4285F4), // Blue color
             ),
           ),
           const SizedBox(height: 16),
