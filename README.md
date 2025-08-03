@@ -47,7 +47,7 @@
 ### Setup
 1. <b>Clone the repository:</b>
    ```sh
-   git clone https://github.com/yourusername/asthmaguard.git
+   git clone https://github.com/KarikariSamuelZachary/asthmaguard.git
    cd asthmaguardv2
    ```
 2. <b>Install dependencies:</b>
