@@ -64,11 +64,6 @@
 - Upload <code>bluetooth_connection_integrated.ino</code> to your Arduino Nano BLE.
 - Connect PMS5003, LPS22HB, and LCD as per the wiring diagram (see <code>/hardware</code> or project docs).
 
-<p align="center">
-  <img src="assets/images/phone_alert.png" alt="Pollution Tracker" width="320"/>
-  <img src="assets/images/wellness_journey_vector.jpg" alt="Health Report" width="320"/>
-</p>
-
 ---
 
 ## 🛡️ Emergency Alert System
