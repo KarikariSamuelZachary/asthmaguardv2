@@ -79,7 +79,7 @@ mobile/                   # Flutter app source code
 bluetooth_connection/      # Arduino firmware
 assets/                    # Images and static assets
 .env.example               # Environment variable template
-README.md                  # Project documentation
+README.md                 
 ```
 
 ---
