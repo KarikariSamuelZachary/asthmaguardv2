@@ -14,6 +14,7 @@ class AlertNotificationService {
   final Map<String, DateTime> _lastAlertTimes = {};
   static const Duration _cooldown = Duration(minutes: 5);
   final List<Map<String, dynamic>> _notificationLog = [];
+  int _nextNotificationId = 0;
 
   List<Map<String, dynamic>> get notificationLog =>
       List.unmodifiable(_notificationLog);
@@ -59,7 +60,7 @@ class AlertNotificationService {
       playSound: true,
     );
     final details = NotificationDetails(android: androidDetails);
-    await _plugin.show(0, title, body, details);
+    await _plugin.show(_nextNotificationId++, title, body, details);
   }
 
   Importance _getImportance(AlertLevel level) {
