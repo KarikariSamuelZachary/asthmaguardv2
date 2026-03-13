@@ -13,7 +13,7 @@ class MeditationSection extends StatefulWidget {
 class _MeditationSectionState extends State<MeditationSection> {
   bool _isActive = false;
   int _selectedDuration = 300;
-  late Timer _timer;
+  Timer? _timer;
   int _remainingTime = 0;
 
   final List<Map<String, dynamic>> _presets = [
@@ -29,9 +29,10 @@ class _MeditationSectionState extends State<MeditationSection> {
       _remainingTime = _selectedDuration;
     });
 
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingTime > 0) {
-        setState(() => _remainingTime--);
+        if (mounted) setState(() => _remainingTime--);
       } else {
         _stopTimer();
       }
@@ -39,7 +40,7 @@ class _MeditationSectionState extends State<MeditationSection> {
   }
 
   void _stopTimer() {
-    _timer.cancel();
+    _timer?.cancel();
     setState(() {
       _isActive = false;
       _remainingTime = 0;
@@ -47,7 +48,7 @@ class _MeditationSectionState extends State<MeditationSection> {
   }
 
   void _pauseTimer() {
-    _timer.cancel();
+    _timer?.cancel();
     setState(() => _isActive = false);
   }
 
@@ -59,9 +60,7 @@ class _MeditationSectionState extends State<MeditationSection> {
 
   @override
   void dispose() {
-    if (_isActive) {
-      _timer.cancel();
-    }
+    _timer?.cancel();
     super.dispose();
   }
 
