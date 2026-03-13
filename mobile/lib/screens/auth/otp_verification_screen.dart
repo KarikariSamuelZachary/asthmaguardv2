@@ -11,6 +11,8 @@ class EmailVerificationScreen extends StatefulWidget {
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   bool _isLoading = false;
+  int _verificationRetries = 0;
+  static const int _maxRetries = 30; // Stop after ~60 seconds
 
   @override
   void initState() {
@@ -27,10 +29,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   }
 
   void _startVerificationCheck() {
+    if (!mounted) return;
     Future.delayed(const Duration(seconds: 2), _checkEmailVerifiedAndRedirect);
   }
 
   Future<void> _checkEmailVerifiedAndRedirect() async {
+    if (!mounted) return;
     await FirebaseAuth.instance.currentUser?.reload();
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && user.emailVerified) {
@@ -38,8 +42,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         Navigator.pushReplacementNamed(context, '/onboarding');
       }
     } else {
-      // If not verified, check again after a short delay
-      _startVerificationCheck();
+      _verificationRetries++;
+      if (_verificationRetries < _maxRetries) {
+        _startVerificationCheck();
+      }
+      // After max retries, stop polling — user can tap Resend
     }
   }
 
