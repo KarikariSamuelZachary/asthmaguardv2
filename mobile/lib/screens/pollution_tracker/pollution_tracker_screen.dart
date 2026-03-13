@@ -72,10 +72,8 @@ class _PollutionTrackerScreenState extends State<PollutionTrackerScreen> {
   }
 
   void _validateAccessToken() {
-    if (accessToken == null) {
-      throw Exception(
-        'Access token is not available. Please check your .env file.',
-      );
+    if (accessToken == null || accessToken!.isEmpty) {
+      debugPrint('Warning: MAPBOX_ACCESS_TOKEN is not set in .env file.');
     }
   }
 
