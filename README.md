@@ -20,7 +20,7 @@
 
 ## Features
 
-### <img src="https://img.icons8.com/color/48/000000/smartphone-tablet.png" width="24"/> Mobile App (Flutter)
+### Mobile App (Flutter)
 - <b>Real-Time Sensor Data:</b> View live readings for <span style="color:#1976d2">PM1.0</span>, <span style="color:#388e3c">PM2.5</span>, <span style="color:#fbc02d">PM10</span>, temperature, humidity and pressure.
 - <b>Emergency Alerts:</b> Automatic notifications (<span style="color:#0288d1">info</span>, <span style="color:#fbc02d">warning</span>, <span style="color:#d32f2f">danger</span>) when thresholds are exceeded.
 - <b>In-App Notification Center:</b> All alerts are logged and viewable in a dedicated notifications screen.
