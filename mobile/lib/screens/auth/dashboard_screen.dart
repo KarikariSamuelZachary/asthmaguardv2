@@ -44,22 +44,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   BluetoothDevice? _device;
   BluetoothCharacteristic? _tempChar;
   BluetoothCharacteristic? _pressureChar;
-  BluetoothCharacteristic? _pm25Char; // For PM2.5 characteristic
-  BluetoothCharacteristic? _pm10Char; // For PM10 characteristic
-  Stream<List<int>>? _tempStream;
-  Stream<List<int>>? _pressureStream;
-  Stream<List<int>>? _pm25Stream; // For PM2.5 stream
-  Stream<List<int>>? _pm10Stream; // For PM10 stream;
+  BluetoothCharacteristic? _pm25Char;
+  BluetoothCharacteristic? _pm10Char;
   String _fullName = 'User';
+  bool _bleConnected = false;
 
   final Random _random = Random();
   Timer? _demoTimer;
 
-  // Add this for notification service
+  // Stream subscriptions for cleanup
+  StreamSubscription<List<ScanResult>>? _scanSubscription;
+  StreamSubscription<List<int>>? _tempSubscription;
+  StreamSubscription<List<int>>? _pressureSubscription;
+  StreamSubscription<List<int>>? _pm25Subscription;
+  StreamSubscription<List<int>>? _pm10Subscription;
+
   final _alertService = AlertNotificationService();
   bool _alertedPM25 = false;
   bool _alertedPM10 = false;
-  bool _alertedPM1 = false;
 
   @override
   void initState() {
@@ -67,18 +69,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _alertService.init();
     _connectAndSubscribeBLE();
     _loadFullName();
+    _startDemoTimer();
+  }
+
+  void _startDemoTimer() {
+    _demoTimer?.cancel();
     _demoTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (_bleConnected) return; // Don't overwrite real BLE data
+      if (!mounted) return;
       setState(() {
-        // Simulate increasing PM values
         _pm25 += 2;
         _pm10 += 3;
-        // Simulate PM1 as well (if needed)
-        // Clamp values to reasonable ranges
         _pm25 = _pm25.clamp(5, 200);
         _pm10 = _pm10.clamp(10, 300);
-        // Optionally, simulate PM1
-        // _pm1 = (_pm1 ?? 10) + 1;
-        // _pm1 = _pm1.clamp(5, 100);
         _temperature += (_random.nextDouble() - 0.5) * 0.3;
         _pressure += (_random.nextDouble() - 0.5) * 0.8;
         _temperature = _temperature.clamp(18.0, 28.0);
@@ -103,21 +106,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           alertType: 'pm10',
         );
       }
-      // Optionally, PM1 notification
-      // if ((_pm1 ?? 0) > 30 && !_alertedPM1) {
-      //   _alertedPM1 = true;
-      //   _alertService.showAlert(
-      //     title: 'Air Quality Alert',
-      //     body: 'PM1 levels are high (${_pm1 ?? 0} μg/m³)!',
-      //     level: AlertLevel.warning,
-      //     alertType: 'pm1',
-      //   );
-      // }
     });
   }
 
   Future<void> _loadFullName() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _fullName = prefs.getString('fullName') ?? 'User';
     });
@@ -139,27 +133,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _connectAndSubscribeBLE() async {
-    // Log connection attempt for debugging
-    print("Starting BLE scan for Nano33BLESense");
-
     // Scan and connect to the Arduino Nano 33 BLE Sense
     FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
-    FlutterBluePlus.scanResults.listen((results) async {
+    _scanSubscription = FlutterBluePlus.scanResults.listen((results) async {
       for (ScanResult r in results) {
-        // Print all found devices for debugging
-        print("Found device: ${r.device.name} (${r.device.id})");
-
-        if (r.device.name == "AsthmaGuard") {
-          print("Found AsthmaGuard! Connecting...");
+        if (r.device.name == "AsthmaGuard" && !_bleConnected) {
           await FlutterBluePlus.stopScan();
+          _scanSubscription?.cancel();
 
           _device = r.device;
           await _device!.connect();
-          print("Connected to Nano33BLESense");
+          _bleConnected = true;
+          _demoTimer?.cancel(); // Stop demo data when real device connects
 
           List<BluetoothService> services = await _device!.discoverServices();
-          print(
-              "Discovered ${services.length} services"); // Use the updated UUIDs for service and characteristics
           final String serviceUuid = "00000000-5ec4-4083-81cd-a10b8d5cf6ec";
           final String tempUuid = "00000001-5ec4-4083-81cd-a10b8d5cf6ec";
           final String pressureUuid = "00000002-5ec4-4083-81cd-a10b8d5cf6ec";
@@ -167,76 +154,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final String pm10Uuid = "00000004-5ec4-4083-81cd-a10b8d5cf6ec";
 
           for (var service in services) {
-            print("Service UUID: ${service.uuid.toString().toLowerCase()}");
-
-            // Check if this is our sensor service
             if (service.uuid.toString().toLowerCase() == serviceUuid) {
-              print("Found sensor service");
-
               for (var characteristic in service.characteristics) {
                 final charUuid = characteristic.uuid.toString().toLowerCase();
-                print("Characteristic UUID: $charUuid");
 
                 if (charUuid == tempUuid) {
-                  print("Found temperature characteristic");
                   _tempChar = characteristic;
                   await _tempChar!.setNotifyValue(true);
-                  _tempStream = _tempChar!.value;
-                  _tempStream!.listen((value) {
-                    // Parse string value instead of binary float
+                  _tempSubscription = _tempChar!.value.listen((value) {
                     final tempValue = _parseStringValue(value);
-                    print("Received temperature: $tempValue °C");
-                    setState(() {
-                      _temperature = tempValue;
-                    });
+                    if (mounted) setState(() => _temperature = tempValue);
                   });
                 }
                 if (charUuid == pressureUuid) {
-                  print("Found pressure characteristic");
                   _pressureChar = characteristic;
                   await _pressureChar!.setNotifyValue(true);
-                  _pressureStream = _pressureChar!.value;
-                  _pressureStream!.listen((value) {
-                    // Parse string value instead of binary float
+                  _pressureSubscription = _pressureChar!.value.listen((value) {
                     final pressureValue = _parseStringValue(value);
-                    print("Received pressure: $pressureValue hPa");
-                    setState(() {
-                      _pressure = pressureValue;
-                    });
+                    if (mounted) setState(() => _pressure = pressureValue);
                   });
                 }
-
-                // Handle PM2.5 characteristic
                 if (charUuid == pm25Uuid) {
-                  print("Found PM2.5 characteristic");
                   _pm25Char = characteristic;
                   await _pm25Char!.setNotifyValue(true);
-                  _pm25Stream = _pm25Char!.value;
-                  _pm25Stream!.listen((value) {
-                    // Parse integer value from PM2.5 sensor
+                  _pm25Subscription = _pm25Char!.value.listen((value) {
                     String stringValue = String.fromCharCodes(value);
                     int? pm25Value = int.tryParse(stringValue);
-                    print("Received PM2.5: ${pm25Value ?? 0} μg/m³");
-                    setState(() {
-                      _pm25 = pm25Value ?? 0;
-                    });
+                    if (mounted) setState(() => _pm25 = pm25Value ?? 0);
                   });
                 }
-
-                // Handle PM10 characteristic
                 if (charUuid == pm10Uuid) {
-                  print("Found PM10 characteristic");
                   _pm10Char = characteristic;
                   await _pm10Char!.setNotifyValue(true);
-                  _pm10Stream = _pm10Char!.value;
-                  _pm10Stream!.listen((value) {
-                    // Parse integer value from PM10 sensor
+                  _pm10Subscription = _pm10Char!.value.listen((value) {
                     String stringValue = String.fromCharCodes(value);
                     int? pm10Value = int.tryParse(stringValue);
-                    print("Received PM10: ${pm10Value ?? 0} μg/m³");
-                    setState(() {
-                      _pm10 = pm10Value ?? 0;
-                    });
+                    if (mounted) setState(() => _pm10 = pm10Value ?? 0);
                   });
                 }
               }
@@ -248,20 +201,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  // Parse string values from BLE characteristic bytes
   double _parseStringValue(List<int> bytes) {
     try {
-      // Convert bytes to string
       String stringValue = String.fromCharCodes(bytes);
-      print("Raw string from BLE: '$stringValue'");
-
-      // Try to parse as double
-      double? value = double.tryParse(stringValue);
-
-      // Return the parsed value or 0.0 if parsing failed
-      return value ?? 0.0;
+      return double.tryParse(stringValue) ?? 0.0;
     } catch (e) {
-      print("Error parsing BLE data: $e");
+      debugPrint("Error parsing BLE data: $e");
       return 0.0;
     }
   }
@@ -280,8 +225,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // This is a rough approximation and not scientifically accurate
     final actualVapPres = satVapPres * (1 - ((1013 - pressure) / 100) * 0.1);
 
-    // Calculate relative humidity
-    double humidity = (actualVapPres / satVapPres) * 100;
+    // Calculate relative humidity (guard against division by zero)
+    double humidity = satVapPres > 0
+        ? (actualVapPres / satVapPres) * 100
+        : 50.0;
 
     // Ensure humidity is within 0-100% range
     humidity = humidity.clamp(0.0, 100.0);
@@ -292,9 +239,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void dispose() {
     _demoTimer?.cancel();
-    // Clean up BLE connection when widget is disposed
+    _scanSubscription?.cancel();
+    _tempSubscription?.cancel();
+    _pressureSubscription?.cancel();
+    _pm25Subscription?.cancel();
+    _pm10Subscription?.cancel();
     if (_device != null && _device!.isConnected) {
-      print("Disconnecting from Nano33BLESense");
       _device!.disconnect();
     }
     super.dispose();
@@ -329,9 +279,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ? AppBar(
               elevation: 0,
               backgroundColor: Colors.transparent,
-              title: const Text(
-                'Hi, Samuel',
-                style: TextStyle(
+              title: Text(
+                'Hi, $_fullName',
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue,
