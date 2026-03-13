@@ -14,7 +14,7 @@ void checkSensorDataAndAlert({
     alertNotificationService.showAlert(
       title: 'Temperature Alert',
       body:
-          'Temperature is [24m{temperature.toStringAsFixed(1)}[0m°C, which is outside the comfortable range.',
+          'Temperature is ${temperature.toStringAsFixed(1)}°C, which is outside the comfortable range.',
       alertType: 'temperature',
       level: AlertLevel.warning,
     );
@@ -23,7 +23,7 @@ void checkSensorDataAndAlert({
     alertNotificationService.showAlert(
       title: 'Humidity Alert',
       body:
-          'Humidity is [24m{humidity.toStringAsFixed(1)}[0m%, which may affect breathing comfort.',
+          'Humidity is ${humidity.toStringAsFixed(1)}%, which may affect breathing comfort.',
       alertType: 'humidity',
       level: AlertLevel.info,
     );
@@ -32,7 +32,7 @@ void checkSensorDataAndAlert({
     alertNotificationService.showAlert(
       title: 'Pressure Alert',
       body:
-          'Pressure is [24m{pressure.toStringAsFixed(1)}[0m hPa, which could affect sensitive individuals.',
+          'Pressure is ${pressure.toStringAsFixed(1)} hPa, which could affect sensitive individuals.',
       alertType: 'pressure',
       level: AlertLevel.info,
     );
