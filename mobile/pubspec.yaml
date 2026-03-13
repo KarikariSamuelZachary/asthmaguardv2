@@ -50,6 +50,8 @@ dependencies:
   flutter_local_notifications: ^17.0.0
   smooth_page_indicator: ^1.2.1
   cloud_firestore: ^5.6.12
+  path_provider: ^2.1.2
+  http: ^1.2.1
   
 dev_dependencies:
   flutter_test:
@@ -59,6 +61,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    # WARNING: .env is bundled in the app binary and can be extracted.
+    # Only put client-side keys here (e.g., MAPBOX_ACCESS_TOKEN).
+    # Server-side secrets should use --dart-define at build time.
     - .env
     - assets/images/asthmaguard-logo.svg
     - assets/images/
