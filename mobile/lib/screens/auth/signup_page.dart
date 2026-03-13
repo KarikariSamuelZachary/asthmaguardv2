@@ -42,6 +42,7 @@ class _SignupScreenState extends State<SignupScreen> {
       // Save full name to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('fullName', _nameController.text.trim());
+      if (!mounted) return;
       setState(() => _isLoading = false);
       // After successful signup, go to OTP screen (or dashboard if you prefer)
       Navigator.pushReplacementNamed(
@@ -50,6 +51,7 @@ class _SignupScreenState extends State<SignupScreen> {
         arguments: _nameController.text, // Pass the full name
       );
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       String errorMessage = 'Signup failed. Please try again.';
       if (e.code == 'email-already-in-use') {
@@ -70,6 +72,7 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Signup failed: \n${e.toString()}')),
