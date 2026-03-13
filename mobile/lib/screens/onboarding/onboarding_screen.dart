@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -74,7 +75,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 _isLastPage
                     ? ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('hasSeenOnboarding', true);
+                          if (!context.mounted) return;
                           Navigator.pushReplacementNamed(context, '/home');
                         },
                         style: ElevatedButton.styleFrom(
@@ -107,7 +111,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             top: 60,
             right: 24,
             child: TextButton(
-              onPressed: () {
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('hasSeenOnboarding', true);
+                if (!context.mounted) return;
                 Navigator.pushReplacementNamed(context, '/home');
               },
               child: const Text(
