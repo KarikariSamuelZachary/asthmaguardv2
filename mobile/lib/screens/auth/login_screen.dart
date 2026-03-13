@@ -49,9 +49,11 @@ class _LoginScreenState extends State<LoginScreen>
     try {
       await Provider.of<AuthProvider>(context, listen: false).signIn(
           _emailController.text.trim(), _passwordController.text.trim());
+      if (!mounted) return;
       setState(() => _isLoading = false);
       Navigator.pushReplacementNamed(context, '/dashboard');
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Login failed: \n${e.toString()}')),
