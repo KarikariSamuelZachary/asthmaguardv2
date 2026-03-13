@@ -26,4 +26,10 @@ class AudioProvider extends ChangeNotifier {
     isPlaying = value;
     notifyListeners();
   }
+
+  @override
+  void dispose() {
+    player?.dispose();
+    super.dispose();
+  }
 }
