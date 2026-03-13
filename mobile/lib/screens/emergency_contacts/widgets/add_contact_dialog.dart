@@ -101,7 +101,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
                   if (value == null || value.isEmpty) {
                     return 'Email is required';
                   }
-                  if (!value.contains('@')) {
+                  if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)) {
                     return 'Please enter a valid email';
                   }
                   return null;
@@ -203,7 +203,7 @@ class _AddContactDialogState extends State<AddContactDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: [38;5;9m${e.toString()}[0m'),
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
