@@ -127,16 +127,15 @@ class _LogSymptomsDialogState extends State<LogSymptomsDialog> {
     );
     Provider.of<SymptomLogProvider>(context, listen: false).addLog(log);
     await Future.delayed(const Duration(milliseconds: 600)); // Simulate save
+    if (!mounted) return;
     setState(
         () => _saving = false); // Set saving to false before closing dialog
-    if (mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Symptom logged successfully!'),
-          backgroundColor: Colors.teal,
-        ),
-      );
-    }
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Symptom logged successfully!'),
+        backgroundColor: Colors.teal,
+      ),
+    );
   }
 }
