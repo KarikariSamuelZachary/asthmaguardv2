@@ -66,7 +66,7 @@ class _NotificationPreferencesScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                'Failed to load notification preferences: [31m${e.toString()}[0m'),
+                'Failed to load notification preferences: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
