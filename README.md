@@ -18,7 +18,7 @@
 
 ---
 
-## 🚀 Features
+## Features
 
 ### <img src="https://img.icons8.com/color/48/000000/smartphone-tablet.png" width="24"/> Mobile App (Flutter)
 - <b>Real-Time Sensor Data:</b> View live readings for <span style="color:#1976d2">PM1.0</span>, <span style="color:#388e3c">PM2.5</span>, <span style="color:#fbc02d">PM10</span>, temperature, humidity and pressure.
@@ -37,7 +37,7 @@
 
 ---
 
-## 📱 Getting Started
+## Getting Started
 
 ### Prerequisites
 - <img src="https://img.icons8.com/color/48/000000/flutter.png" width="20"/> [Flutter](https://flutter.dev/docs/get-started/install) (3.x recommended)
@@ -66,14 +66,14 @@
 
 ---
 
-## 🛡️ Emergency Alert System
+## Emergency Alert System
 - Alerts are triggered based on real-time sensor thresholds.
 - Three alert levels: <b style="color:#0288d1">Info</b>, <b style="color:#fbc02d">Warning</b>, <b style="color:#d32f2f">Danger</b> (with cooldown to prevent spam).
 - Alerts appear both as system notifications and in the app's notification center.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 ```text
 mobile/                   # Flutter app source code
 bluetooth_connection/      # Arduino firmware
@@ -84,17 +84,17 @@ README.md
 
 ---
 
-## 🤝 Contributing
+## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. All contributions are welcome!
 
 ---
 
-## 📄 License
+## License
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
-## 🙏 Acknowledgements
+## Acknowledgements
 - Flutter, Arduino, and the open-source community
 - All contributors and testers
 
