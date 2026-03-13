@@ -25,15 +25,19 @@ class _DeviceConnectionScreenState extends State<DeviceConnectionScreen> {
     final connectStatus = await Permission.bluetoothConnect.request();
     final locationStatus = await Permission.locationWhenInUse.request();
 
+    if (!mounted) return;
+
     if (scanStatus.isGranted &&
         connectStatus.isGranted &&
         locationStatus.isGranted) {
       FlutterBluePlus.isScanning.listen((scanning) {
+        if (!mounted) return;
         setState(() {
           isScanning = scanning;
         });
       });
       FlutterBluePlus.scanResults.listen((results) {
+        if (!mounted) return;
         setState(() {
           scanResults = results;
         });
@@ -76,6 +80,7 @@ class _DeviceConnectionScreenState extends State<DeviceConnectionScreen> {
     FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
     Future.delayed(const Duration(seconds: 4), () {
       FlutterBluePlus.stopScan();
+      if (!mounted) return;
       setState(() {
         isScanning = false;
       });
@@ -85,10 +90,12 @@ class _DeviceConnectionScreenState extends State<DeviceConnectionScreen> {
   void _connectToDevice(BluetoothDevice device) async {
     try {
       await device.connect();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Connected to ${device.name}')),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Connection failed: $e')),
       );
