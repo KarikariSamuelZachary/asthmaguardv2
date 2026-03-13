@@ -45,13 +45,6 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Shuffle tips each time the screen is opened for variety
-    _tips.shuffle();
-  }
-
-  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
