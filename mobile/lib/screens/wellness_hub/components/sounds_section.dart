@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../models/sound.dart';
 import 'sounds_section/sound_card.dart';
 import 'sounds_section/sound_filters.dart';
@@ -53,16 +53,15 @@ class _SoundsSectionState extends State<SoundsSection> {
       final audioProvider = Provider.of<AudioProvider>(context, listen: false);
       await audioProvider.initializeAudio();
     } catch (e) {
-      print('Error initializing audio: $e');
+      debugPrint('Error initializing audio: $e');
     }
   }
 
   Future<void> _checkAuthAndLoadSounds() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    final user = FirebaseAuth.instance.currentUser;
 
-    if (token == null) {
-      // Handle unauthenticated state
+    if (user == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please log in to access sounds'),
@@ -122,7 +121,7 @@ class _SoundsSectionState extends State<SoundsSection> {
       await audioProvider.playSound(
           sound.audioURL, sound.title, sound.location);
     } catch (e) {
-      print('Playback error: $e');
+      debugPrint('Playback error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to play sound')),
