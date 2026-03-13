@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -9,11 +10,40 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController(text: 'User');
-  final _emailController = TextEditingController(text: 'user@example.com');
-  final _dobController = TextEditingController(text: '01/01/1990');
-  final _heightController = TextEditingController(text: '175');
-  final _weightController = TextEditingController(text: '70');
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _dobController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _weightController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _nameController.text = prefs.getString('profileName') ?? '';
+      _emailController.text = prefs.getString('profileEmail') ?? '';
+      _dobController.text = prefs.getString('profileDob') ?? '';
+      _heightController.text = prefs.getString('profileHeight') ?? '';
+      _weightController.text = prefs.getString('profileWeight') ?? '';
+    });
+  }
+
+  Future<void> _saveProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profileName', _nameController.text.trim());
+    await prefs.setString('profileEmail', _emailController.text.trim());
+    await prefs.setString('profileDob', _dobController.text.trim());
+    await prefs.setString('profileHeight', _heightController.text.trim());
+    await prefs.setString('profileWeight', _weightController.text.trim());
+    // Also sync fullName for dashboard greeting
+    await prefs.setString('fullName', _nameController.text.trim());
+  }
 
   @override
   void dispose() {
@@ -103,7 +133,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value == null || value.isEmpty || !value.contains('@')) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a valid email';
+                  }
+                  if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)) {
                     return 'Please enter a valid email';
                   }
                   return null;
@@ -170,8 +203,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
+                    await _saveProfile();
+                    if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                           content: Text('Profile updated successfully!')),
