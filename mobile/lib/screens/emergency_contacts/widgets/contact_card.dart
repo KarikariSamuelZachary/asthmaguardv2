@@ -31,9 +31,6 @@ class ContactCard extends StatelessWidget {
     final priorityText =
         getPriorityText(contact['Priority'] ?? contact['priority']);
 
-    // Debug print to see what data we're receiving
-    print('Contact data: $contact');
-
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
