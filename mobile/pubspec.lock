@@ -484,18 +484,32 @@ packages:
     dependency: "direct main"
     description:
       name: google_maps_flutter
+<<<<<<< Updated upstream
       sha256: "85339d0c9b5c7bac305df0bc1bc72a990f7f59b1846f048c96c022110d5d4a69"
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.15.0"
+=======
+      sha256: "0114a31e177f650f0972347d93122c42661a75b869561ff6a374cc42ff3af886"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.16.0"
+>>>>>>> Stashed changes
   google_maps_flutter_android:
     dependency: transitive
     description:
       name: google_maps_flutter_android
+<<<<<<< Updated upstream
       sha256: ba0947315ddc9107ecc8d95fa26eb3b87b4f27b221606ce72518314d99c7306c
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.19.2"
+=======
+      sha256: "68a3907c90dc37caffbcfc1093541ef2c18d6ebb53296fdb9f04822d16269353"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.19.3"
+>>>>>>> Stashed changes
   google_maps_flutter_ios:
     dependency: transitive
     description:
@@ -508,18 +522,32 @@ packages:
     dependency: transitive
     description:
       name: google_maps_flutter_platform_interface
+<<<<<<< Updated upstream
       sha256: "0f8c6674d70c7e9a09cd34f63b18ebaf8a5822e85b558128eae0fdf02b4a3e93"
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.14.2"
+=======
+      sha256: ddbe34435dfb34e83fca295c6a8dcc53c3b51487e9eec3c737ce4ae605574347
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.15.0"
+>>>>>>> Stashed changes
   google_maps_flutter_web:
     dependency: transitive
     description:
       name: google_maps_flutter_web
+<<<<<<< Updated upstream
       sha256: "2321d24f8bce2d01c441b9fd7835a6032ea44b3f0bfcf93bcebd9740fb5a85cd"
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.6.1"
+=======
+      sha256: "6cefe4ef4cc61dc0dfba4c413dec4bd105cb6b9461bfbe1465ddd09f80af377d"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.6.2"
+>>>>>>> Stashed changes
   hooks:
     dependency: transitive
     description:
@@ -1249,10 +1277,17 @@ packages:
     dependency: transitive
     description:
       name: webview_flutter_wkwebview
+<<<<<<< Updated upstream
       sha256: "2df8fd9ada04d699b9db8e79aa783a16e5d89b69e5b74009b87e16b59912cf98"
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.24.0"
+=======
+      sha256: "0d85e8bc5db9a7c49f6ff57cbeafc6cd8216ad9c9ebc70b2c4579d955698933a"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.24.1"
+>>>>>>> Stashed changes
   win32:
     dependency: transitive
     description:
