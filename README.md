@@ -40,7 +40,7 @@
 ## Getting Started
 
 ### Prerequisites
-- [Flutter](https://flutter.dev/docs/get-started/install) (3.x recommended)
+- Flutter
 - Arduino IDE (for hardware)
 - Android Studio or Xcode (for mobile builds)
 
