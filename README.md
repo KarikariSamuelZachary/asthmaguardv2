@@ -40,8 +40,8 @@
 ## Getting Started
 
 ### Prerequisites
-- <img src="https://img.icons8.com/color/48/000000/flutter.png" width="20"/> [Flutter](https://flutter.dev/docs/get-started/install) (3.x recommended)
-- <img src="https://img.icons8.com/color/48/000000/arduino.png" width="20"/> Arduino IDE (for hardware)
+- [Flutter](https://flutter.dev/docs/get-started/install) (3.x recommended)
+- Arduino IDE (for hardware)
 - Android Studio or Xcode (for mobile builds)
 
 ### Setup
