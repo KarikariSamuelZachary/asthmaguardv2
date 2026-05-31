@@ -29,7 +29,7 @@
 - <b>Modern UI:</b> Clean, responsive, and accessible design.
 - <b>Bluetooth LE (BLE) Integration:</b> Seamless communication with custom hardware.
 
-### <img src="https://img.icons8.com/color/48/000000/microchip.png" width="24"/> Hardware (Arduino Nano BLE)
+### Hardware (Arduino Nano BLE)
 - <b>Sensors:</b> PMS5003 (PM1.0, PM2.5, PM10), LPS22HB (temperature, pressure), and optional humidity sensor.
 - <b>LCD Display:</b> Cycles through temperature, pressure and particulate matter values every 3 seconds.
 - <b>BLE Service:</b> Streams sensor data to the mobile app in real time.
